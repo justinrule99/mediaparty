@@ -14,7 +14,31 @@
   }
 }
 
+.form-len {
+ width: 300px;
+}
 
+.navbar-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.login-modal {
+  margin-top: 10px;
+  padding-left: 5%;
+  padding-right: 5%;
+}
+
+.login-error {
+  margin-left: 5%;
+  margin-right: 5%
+}
+
+.login-button {
+  width: 100px;
+  margin: 5%;
+}
 
 .App-header {
   background-color: #282c34;

@@ -52,11 +52,10 @@ const VideoPlayer = (props) => {
         height: '750px'
     }
 
-    // based on youtube iframe api
     // need to update video when playState changes
     return (
         <div className="video-player">
-            <YouTube videoId="2g811Eo7K8U" opts={options} onStateChange={onStateChange} onReady={handleVideoUpdate}/>
+            <YouTube videoId={appState.videoId} opts={options} onStateChange={onStateChange} onReady={handleVideoUpdate}/>
         </div>
     );
 
