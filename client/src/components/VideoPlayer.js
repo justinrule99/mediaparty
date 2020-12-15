@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import '../styles/VideoPlayer.css';
 import YouTube from 'react-youtube';
 
@@ -20,6 +20,7 @@ const VideoPlayer = (props) => {
     // these will be sent thru the websocket and (hopefull) resent on new info
     const appState = props.appState;
     const setAppState = props.setAppState;
+    const client = appState.client;
 
 
     const handleVideoUpdate = (event) => {
@@ -39,10 +40,24 @@ const VideoPlayer = (props) => {
 
 
 
+    useEffect(() => {
+        console.log("CLIENT");
+        console.log(JSON.stringify(client, null,2));
+    })
 
     const onStateChange = (event) => {
         // this affects state in this component AND parent
-        setAppState({...appState, playState: event.data});
+        // client is always empty here
+        // can send in parent?
+        if (client) {
+
+            // client.send(event.data);
+        }
+        setAppState({
+            ...appState,
+            playState: event.data,
+            updatePlayState: true
+        });
     }
 
     // CHANGE THIS

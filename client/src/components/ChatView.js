@@ -12,10 +12,13 @@ import {w3cwebsocket as W3CWebSocket} from "websocket/lib/websocket";
 
 const ChatView = (props) => {
     const [chatToSend, setChatToSend] = useState("");
+    const [sessionToJoin, setSessionToJoin] = useState("");
 
     const appState = props.appState;
     const setAppState = props.setAppState;
     const client = appState.client;
+
+    const chatArea = document.getElementById("chat-area");
 
     // need to add prev chats to chatArea
     const createSessionOnClick = async () => {
@@ -29,58 +32,54 @@ const ChatView = (props) => {
             ...appState,
             joinCode: sessionResponse.joinCode
         })
-
-        // console.log("jc: "+appState.joinCode);
-        // await joinSession(appState.joinCode);
-
     }
 
-    // how to connect to socket
     const joinSession = async () => {
         // no http, all sockets?
-        let newClient = new W3CWebSocket(url+"/chat/"+appState.user.username+"/"+appState.joinCode);
-        console.log(newClient);
+        let joinUrl = "ws://localhost:8080/chat/"+appState.user.username+"/"+sessionToJoin;
+        // only set join code, dont do new client
 
+        // let newClient = new W3CWebSocket("ws://localhost:8080/chat/"+appState.user.username+"/"+sessionToJoin);
+        console.log(joinUrl);
+        // why would this cause a cors error?
         setAppState({
             ...appState,
-            client: newClient
-        })
+            joinCode: sessionToJoin,
+        });
+
+
+
+        console.log("from joinses:"+sessionToJoin);
 
 
     }
 
+
     const sendChat = () => {
-        const chatArea = document.getElementById("chat-area");
         // need to call upstream function to actually send thru socket
         console.log(chatToSend);
         console.log(chatArea);
 
-        // chatArea.innerHTML += chatToSend + "\n";
-        // need to put each chat in a separate array entry
-        setAppState({
-            ...appState,
-            messages: [chatToSend],
-        })
         // client isn't updated
-        console.log(JSON.stringify(appState.client, null, 2))
+        console.log(JSON.stringify(appState.client, null, 2));
+        chatArea.innerHTML += chatToSend + "\n";
+
         client.send(chatToSend);
         setChatToSend("");
     }
 
+    // set textArea innerhtml to messages
 
     useEffect(() => {
         console.log("use effect...");
+        console.log(appState.client, null, 2);
 
-        appState.client.onopen = () => {
-            console.log("open socket1");
-        }
+        if (chatArea) {
+            chatArea.innerHTML = "";
 
-        appState.client.onmessage = (message) => {
-            console.log("message receiv3ed: "+ message);
-        }
-
-        appState.client.onclose = () => {
-            console.log("connectioen closing..");
+            appState.messages.map((message) => {
+                chatArea.innerHTML += message + "\n";
+            })
         }
     })
 
@@ -95,7 +94,13 @@ const ChatView = (props) => {
                             <>
                                 <Button className="mr-sm-2" onClick={createSessionOnClick}>{"Create Session"}</Button>
                                 <Form inline >
-                                    <FormControl type="text" placeholder="Join Code" className="mr-sm-2" />
+                                    <FormControl
+                                        type="text"
+                                        placeholder="Join Code"
+                                        className="mr-sm-2"
+                                        value={sessionToJoin}
+                                        onChange={e => setSessionToJoin(e.target.value)}
+                                    />
                                     <Button variant="outline-success" className="mr-sm-2"
                                             onClick={joinSession}>{"Join Session"}</Button>
                                 </Form>

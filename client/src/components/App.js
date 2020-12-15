@@ -10,7 +10,7 @@ import React, {useEffect, useState} from "react";
 import VideoPlayer from "./VideoPlayer";
 import ChatView from "./ChatView";
 import {w3cwebsocket as W3CWebSocket} from "websocket";
-import {createUser, logInUser} from "../util/utils";
+import {logInUser} from "../util/utils";
 import {Modal} from "react-bootstrap";
 
 
@@ -19,6 +19,7 @@ const App = () => {
     // need video state here
     const [appState, setAppState] = useState({
         playState: -1,
+        updatePlayState: false,
         videoId: "yuIyN_mii7c",
         user: {},
         client: {},
@@ -81,15 +82,12 @@ const App = () => {
     }
 
     const loadVideo = () => {
-        let img = new Image();
-        // check if status is 404
-
+        // will check if video exists
         let http = new XMLHttpRequest();
 
         http.open('HEAD', "http://img.youtube.com/vi/" + id + "/mqdefault.jpg", false);
         http.send();
 
-        console.log(JSON.stringify(img, null, 2));
         if (http.status === 404) {
             console.log("this vidoe doesn't exist");
 
@@ -110,14 +108,36 @@ const App = () => {
 
     // same as componentDidUpdate
     // will this run when child components change state??
+    // need to send playState through websocket on update
+    let newClient;
+    let prevState = appState.playState;
     useEffect(() => {
-        if (!appState.client) {
-            // let newClient = new W3CWebSocket("ws://localhost:8080/chat/"+appState.user.username+"/7960");
+        // how do we get correct url?
 
-            // setAppState({
-            //     ...appState,
-            //     client: newClient
-            // })
+
+        console.log("CLI");
+        console.log(appState.client);
+        // still in connecting
+        if (appState.client.url && appState.client.readyState === 1) {
+            // when do we send playState?
+            if (appState.updatePlayState) {
+                appState.client.send(appState.playState);
+                setAppState({
+                    ...appState,
+                    updatePlayState: false
+                });
+            }
+        }
+
+        // create connection if no connection and is join code
+        if (!appState.client.url && appState.joinCode !== 0) {
+
+            newClient = new W3CWebSocket("ws://localhost:8080/chat/"+appState.user.username+"/"+appState.joinCode);
+
+            setAppState({
+                ...appState,
+                client: newClient
+            })
         }
 
         // can we connect to a socket here?
@@ -125,14 +145,14 @@ const App = () => {
             console.log("open socket");
         }
 
+        // should backend send message object instead of string?
         appState.client.onmessage = (message) => {
-            // change state
-            console.log("message received: "+ message);
-            // setAppState({
-            //     ...appState,
-            //     messages: [message.data]
-            // });
-            console.log(appState.messages);
+
+            setAppState({
+                ...appState,
+                messages: [...appState.messages, message.data]
+            });
+
         }
 
         appState.client.onclose = () => {
@@ -140,8 +160,9 @@ const App = () => {
         }
 
         // shows state on any lifecycle
+
         showState();
-    }, [appState]);
+    });
 
 
     return (
